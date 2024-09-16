@@ -776,7 +776,8 @@ void Map::AppendDescriptor(Isolate* isolate, Descriptor* desc) {
     descriptors->Append(desc);
     SetNumberOfOwnDescriptors(number_of_own_descriptors + 1);
 #ifndef V8_DISABLE_WRITE_BARRIERS
-    WriteBarrier::Marking(descriptors, number_of_own_descriptors + 1);
+    WriteBarrier::ForDescriptorArray(descriptors,
+                                     number_of_own_descriptors + 1);
 #endif
   }
   // Properly mark the map if the {desc} is an "interesting symbol".
@@ -851,12 +852,8 @@ Tagged<Map> Map::GetMapFor(ReadOnlyRoots roots, InstanceType type) {
 // static
 Tagged<Map> Map::ElementsTransitionMap(Isolate* isolate,
                                        ConcurrencyMode cmode) {
-  if (auto res = TransitionsAccessor(isolate, *this, IsConcurrent(cmode))
-                     .SearchSpecial(
-                         ReadOnlyRoots(isolate).elements_transition_symbol())) {
-    return *res;
-  }
-  return Map();
+  return TransitionsAccessor(isolate, *this, IsConcurrent(cmode))
+      .SearchSpecial(ReadOnlyRoots(isolate).elements_transition_symbol());
 }
 
 ACCESSORS(Map, dependent_code, Tagged<DependentCode>, kDependentCodeOffset)
